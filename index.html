@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MichelUS – GPT-5 Slider OS</title>
+<style>body{margin:0;background:#0b0d10;color:#e8eefc;font:14px system-ui} .app{max-width:1100px;margin:auto;padding:16px}</style>
+</head>
+<body>
+<div class="app">
+  <h1>MichelUS – GPT-5</h1>
+  <div>
+    <input id="openaiKey" placeholder="sk-..." style="width:260px">
+    <select id="model"><option value="gpt-5" selected>gpt-5</option><option value="gpt-4o">gpt-4o</option></select>
+    <button id="save">Enregistrer clé</button>
+  </div>
+  <hr>
+  <div>
+    <input id="chat" placeholder="Parle naturellement..." style="width:80%">
+    <button id="send">Envoyer</button>
+  </div>
+  <pre id="log" style="white-space:pre-wrap;background:#111;padding:10px;border-radius:8px;min-height:140px;margin-top:10px"></pre>
+</div>
+<script>
+function getKey(){ return localStorage.getItem('openai_key')||''; }
+function setKey(k){ localStorage.setItem('openai_key', k||''); }
+document.getElementById('openaiKey').value = getKey();
+document.getElementById('save').onclick = ()=>{ setKey(document.getElementById('openaiKey').value.trim()); alert('Clé enregistrée'); };
+
+const SYSTEM = "Tu es MichelUS Assistant. Réponds en FR brièvement puis fournis un JSON {\"adjust\":[{\"id\":\"gloss_level\",\"mode\":\"delta\",\"value\":0.2}],\"notes\":\"...\"}.";
+
+function log(t){ const el=document.getElementById('log'); el.textContent += t + "\n"; el.scrollTop=el.scrollHeight; }
+
+async function call(){
+  const key = getKey(); if(!key){ alert('Ajoute ta clé'); return; }
+  const model = document.getElementById('model').value;
+  const text = document.getElementById('chat').value.trim(); if(!text) return;
+  log("Toi: " + text);
+  document.getElementById('chat').value='';
+  try{
+    const r = await fetch('/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-openai-key': key},
+      body: JSON.stringify({model, messages:[{role:'system',content:SYSTEM},{role:'user',content:text}], temperature:0.7})
+    });
+    const data = await r.json();
+    log("Assistant: " + (data.text || JSON.stringify(data)));
+  }catch(e){ log("Erreur: " + e.message); }
+}
+document.getElementById('send').onclick = call;
+</script>
+</body></html>

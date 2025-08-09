@@ -1,0 +1,1 @@
+Déploie sur Vercel → entre ta clé → parle. Dossier contient index.html et api/chat.js.
